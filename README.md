@@ -5,7 +5,7 @@ CSV and JSON tables, both ways, for AI agents. No GUI, no account, no dependenci
 ## Install
 
 ```sh
-pip install csv2json
+pip install git+https://github.com/Alfredo-ctrl/csv2json.git
 ```
 
 ## Use it from the terminal
