@@ -1,12 +1,12 @@
 # Contributing
 
-csv2json is small on purpose. It converts tables both ways and stays out of the way.
+csv2json is one small job: CSV and JSON tables, both ways. Keep it that way.
 
 Rules:
 
-- No new dependencies. Everything is stdlib.
-- Never break the JSON contract: `csv2json describe` and `csv2json convert` must keep printing the same shape.
-- Add a test in `tests/test_core.py` for any new behavior.
-- Run `python -m unittest` before opening a PR.
-
-That's it.
+- One function does one thing. Plain stdlib, no dependencies.
+- Never break the JSON contract: `convert` prints the rows as JSON, errors go to stderr as `{"error": ...}`.
+- A new feature touches code, test, README, MCP description and example in the same commit.
+- Add a test in `tests/test_core.py` for anything new.
+- Run `python -m unittest discover -s tests` before opening a PR.
+- One commit per change, with a message that says why, not just what.

@@ -1,6 +1,6 @@
 # csv2json
 
-CSV and JSON tables, both ways, for AI agents. No GUI, no account, no dependencies: a CLI, a Python API and an MCP server that any agent can drive — Muse, Antigravity, Codex, Claude Code, or a local model.
+CSV and JSON tables, both ways. No dependencies, plain stdlib.
 
 ## Install
 
@@ -27,16 +27,8 @@ csv2json convert -i sales.json -o sales.csv
 Output is JSON, so it is easy to parse:
 
 ```json
-{"rows": 3, "columns": ["name", "total"], "data": [{"name": "Ana", "total": 120}, {"name": "Luis", "total": 85}]}
+{"rows": 3, "columns": ["name", "product", "total", "paid"], "data": [{"name": "Ana", "product": "Keyboard", "total": 120, "paid": true}, {"name": "Luis", "product": "Mouse", "total": 85, "paid": true}, {"name": "Mia", "product": "Monitor", "total": 300, "paid": false}], "output": "sales.json"}
 ```
-
-## How an agent uses it
-
-You translate the user's words into a conversion. `csv2json describe` tells you the columns, the delimiter and a sample, so there is nothing to guess. Examples:
-
-- "turn this spreadsheet into JSON" -> convert
-- "just give me the name and price columns" -> convert with --columns
-- "is this csv semicolon-separated?" -> describe
 
 ## Use it from Python
 
@@ -67,4 +59,4 @@ It speaks MCP over stdio and exposes `convert_table` and `describe_table`. Examp
 
 ## License
 
-MIT
+See [LICENSE](LICENSE).
