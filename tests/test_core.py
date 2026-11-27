@@ -125,6 +125,40 @@ class TestCsv2Json(unittest.TestCase):
         self.assertEqual(res.returncode, 0, res.stderr)
         self.assertEqual(json.loads(res.stdout)["columns"], ["name", "product", "total", "paid"])
 
+    def test_json_to_csv_rejects_non_dict_rows(self):
+        json_path = self.out("nums.json")
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump([1, 2, 3], f)
+        with self.assertRaises(ValueError):
+            json_to_csv(json_path)
+
+    def test_mcp_smoke(self):
+        env = dict(os.environ, PYTHONPATH=os.path.join(os.path.dirname(__file__), ".."))
+        proc = subprocess.Popen(
+            [sys.executable, "-m", "csv2json.cli", "mcp"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=env,
+        )
+        try:
+            reqs = [
+                {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05"}},
+                {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+                {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+                 "params": {"name": "describe_table", "arguments": {"input": self.csv}}},
+            ]
+            for req in reqs:
+                proc.stdin.write(json.dumps(req) + "\n")
+            proc.stdin.flush()
+            lines = [proc.stdout.readline() for _ in range(3)]
+            init = json.loads(lines[0])
+            self.assertEqual(init["result"]["serverInfo"]["name"], "csv2json")
+            tools = json.loads(lines[1])["result"]["tools"]
+            self.assertIn("convert_table", [t["name"] for t in tools])
+            payload = json.loads(json.loads(lines[2])["result"]["content"][0]["text"])
+            self.assertEqual(payload["rows"], 3)
+        finally:
+            proc.stdin.close()
+            proc.wait(timeout=10)
+
 
 if __name__ == "__main__":
     unittest.main()
