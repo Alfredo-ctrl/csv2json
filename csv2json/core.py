@@ -1,8 +1,4 @@
-"""CSV and JSON table conversion. No dependencies, plain stdlib.
-
-csv2json turns a .csv into JSON (one object per row) and back again, so an
-agent can hand a spreadsheet to a model without guessing the shape.
-"""
+"""CSV and JSON table conversion. No dependencies, plain stdlib."""
 
 import csv
 import json
@@ -16,6 +12,7 @@ def _sniff_delimiter(sample):
         return ","
 
 
+# same idea as sheetforge's _csv_value, kept separate: this one also reads true/false
 def _coerce(value):
     # "42" -> 42, "3.5" -> 3.5, "true" -> True, "" -> None
     if value == "":
@@ -75,11 +72,16 @@ def describe(path):
 
 def csv_to_json(path, output=None, typed=True, columns=None, limit=None, ndjson=False):
     """Read a .csv and return a list of dicts (or write it to a .json file)."""
-    info = describe(path)
-    if info["format"] != "csv":
+    if not os.path.exists(path):
+        raise ValueError(f"file not found: {path}")
+    if not path.lower().endswith(".csv"):
         raise ValueError("csv_to_json needs a .csv file")
     with open(path, newline="", encoding="utf-8-sig") as f:
-        reader = csv.DictReader(f, delimiter=info["delimiter"])
+        sample = f.read(4096)
+        f.seek(0)
+        dialect = _sniff_delimiter(sample)
+        reader = csv.DictReader(f, delimiter=dialect)
+        header = reader.fieldnames or []
         rows = []
         for row in reader:
             if columns:
@@ -89,7 +91,7 @@ def csv_to_json(path, output=None, typed=True, columns=None, limit=None, ndjson=
             rows.append(row)
             if limit is not None and len(rows) >= limit:
                 break
-    result = {"rows": len(rows), "columns": info["columns"], "data": rows}
+    result = {"rows": len(rows), "columns": header, "data": rows}
     if output:
         with open(output, "w", encoding="utf-8") as f:
             if ndjson:
@@ -110,6 +112,8 @@ def json_to_csv(path, output=None, columns=None):
         data = json.load(f)
     if isinstance(data, dict):
         data = [data]
+    if not all(isinstance(row, dict) for row in data):
+        raise ValueError("json_to_csv needs a list of objects, every row has to be an object")
     cols = columns or info["columns"]
     rows = [{k: r.get(k, "") for k in cols} for r in data]
     result = {"rows": len(rows), "columns": cols, "data": rows}

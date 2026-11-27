@@ -1,4 +1,4 @@
-"""csv2json command line. Built for agents: JSON in, JSON out."""
+"""csv2json command line. JSON in, JSON out."""
 
 import argparse
 import json
@@ -7,12 +7,12 @@ import sys
 from . import __version__, convert, describe
 
 
-def _fail(msg):
+def _exit_error(msg):
     print(json.dumps({"error": msg}), file=sys.stderr)
     raise SystemExit(1)
 
 
-def _ok(payload):
+def _print_result(payload):
     print(json.dumps(payload, ensure_ascii=False))
 
 
@@ -27,16 +27,16 @@ def cmd_convert(args):
             ndjson=args.ndjson,
         )
     except (ValueError, OSError) as e:
-        _fail(str(e))
-    _ok(result)
+        _exit_error(str(e))
+    _print_result(result)
 
 
 def cmd_describe(args):
     try:
         result = describe(args.input)
     except (ValueError, OSError) as e:
-        _fail(str(e))
-    _ok(result)
+        _exit_error(str(e))
+    _print_result(result)
 
 
 def cmd_mcp(args):

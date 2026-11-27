@@ -1,4 +1,4 @@
-"""Minimal MCP server over stdio. No dependencies, plain JSON-RPC.
+"""MCP server over stdio. Hand-rolled JSON-RPC, no MCP SDK.
 
 Tools: convert_table, describe_table.
 """
@@ -37,13 +37,13 @@ TOOLS = [
 ]
 
 
-def _text(payload):
+def _text_result(payload):
     return {"content": [{"type": "text", "text": json.dumps(payload, ensure_ascii=False)}]}
 
 
-def _call(name, args):
+def _dispatch_tool(name, args):
     if name == "convert_table":
-        return _text(convert(
+        return _text_result(convert(
             args["input"],
             args.get("output"),
             typed=args.get("typed", True),
@@ -52,7 +52,7 @@ def _call(name, args):
             ndjson=args.get("ndjson", False),
         ))
     if name == "describe_table":
-        return _text(describe(args["input"]))
+        return _text_result(describe(args["input"]))
     raise ValueError(f"unknown tool '{name}'")
 
 
@@ -82,7 +82,7 @@ def run():
             resp = {"result": {"tools": TOOLS}}
         elif method == "tools/call":
             try:
-                resp = {"result": _call(req["params"]["name"], req["params"].get("arguments", {}))}
+                resp = {"result": _dispatch_tool(req["params"]["name"], req["params"].get("arguments", {}))}
             except Exception as e:
                 resp = {"result": {"content": [{"type": "text", "text": json.dumps({"error": str(e)})}], "isError": True}}
         else:
